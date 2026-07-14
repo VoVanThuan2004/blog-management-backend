@@ -1,7 +1,12 @@
 import cloudinary from "../config/cloudinary.js";
-import type { UpdateUserDTO, UserProfile } from "../types/user.type.js";
+import type {
+  UpdateUserDTO,
+  UserResponse,
+  UserProfile,
+} from "../types/user.type.js";
 import * as userRepo from "../repositories/user.repository.js";
 import { AppError } from "../utils/app-error.js";
+import type { PaginationParams, PaginationResponse } from "../types/pagination.response.type.js";
 
 export async function getProfile(userId: string): Promise<UserProfile> {
   const user = await userRepo.findById(userId);
@@ -75,4 +80,28 @@ export async function updateProfile(
     dateOfBirth: updated.dateOfBirth ?? null,
     roles: user.roles,
   };
+}
+
+export async function activateUserAccount(userId: string): Promise<boolean> {
+  // 1. Kiểm tra user
+  const user = await userRepo.findById(userId);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  // 2. Lấy trạng thái hiện tại
+  const currentStatus: boolean = user.isActive;
+
+  // 3. Cập nhật trạng thái
+  await userRepo.activateUser(userId, !currentStatus);
+
+  return !currentStatus;
+}
+
+export async function getAllUsers(
+  params: PaginationParams,
+): Promise<PaginationResponse<UserResponse>> {
+  const { page, size, search } = params;
+
+  return await userRepo.findAll(page, size, search);
 }

@@ -42,6 +42,10 @@ export async function login(
     throw new AppError(401, "Invalid email or password");
   }
 
+  if (!user.isActive) {
+    throw new AppError(400, "User account is deactivated");
+  }
+
   const payload = {
     userId: user.userId,
     fullName: user.fullName,

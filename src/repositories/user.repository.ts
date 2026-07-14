@@ -1,5 +1,7 @@
 import { prisma } from "../config/prisma.js";
 import type { User } from "@prisma/client";
+import type { UserResponse } from "../types/user.type.js";
+import type { PaginationResponse } from "../types/pagination.response.type.js";
 
 export type UserWithRoles = User & { roles: string[] };
 
@@ -41,6 +43,61 @@ export async function findById(userId: string): Promise<UserWithRoles | null> {
   };
 }
 
+export async function findAll(
+  page: number,
+  size: number,
+  search?: string,
+): Promise<PaginationResponse<UserResponse>> {
+  const offset = (page - 1) * size;
+  const searchPattern = search ? `%${search}%` : null;
+
+  const whereClause = searchPattern
+    ? `WHERE (u."email" ILIKE $1 OR u."fullName" ILIKE $1) AND u."userId" NOT IN (
+        SELECT ur."userId" FROM "user_roles" ur
+        JOIN "roles" r ON r."roleId" = ur."roleId"
+        WHERE r."roleName" = 'ADMIN'
+      )`
+    : `WHERE u."userId" NOT IN (
+        SELECT ur."userId" FROM "user_roles" ur
+        JOIN "roles" r ON r."roleId" = ur."roleId"
+        WHERE r."roleName" = 'ADMIN'
+      )`;
+
+  const countQuery = `SELECT COUNT(*)::int AS total FROM "users" u ${whereClause}`;
+  const dataQuery = `
+    SELECT
+      u."userId", u."email", u."fullName", u."avatar", u."gender",
+      u."isActive", u."createdAt",
+      COALESCE(
+        (SELECT json_agg(r."roleName") FROM "user_roles" ur
+         JOIN "roles" r ON r."roleId" = ur."roleId"
+         WHERE ur."userId" = u."userId"), '[]'::json
+      ) AS roles
+    FROM "users" u
+    ${whereClause}
+    ORDER BY u."createdAt" DESC
+    LIMIT ${size} OFFSET ${offset}
+  `;
+
+  const [countResult] = searchPattern
+    ? await prisma.$queryRawUnsafe<{ total: number }[]>(countQuery, searchPattern)
+    : await prisma.$queryRawUnsafe<{ total: number }[]>(countQuery);
+
+  const items = searchPattern
+    ? await prisma.$queryRawUnsafe<UserResponse[]>(dataQuery, searchPattern)
+    : await prisma.$queryRawUnsafe<UserResponse[]>(dataQuery);
+
+  const total = countResult?.total ?? 0;
+
+  return {
+    items,
+    total,
+    page,
+    size,
+    totalPages: Math.ceil(total / size),
+  };
+}
+
 export async function updatePassword(userId: string, passwordHash: string) {
   await prisma.user.update({
     where: { userId },
@@ -48,7 +105,21 @@ export async function updatePassword(userId: string, passwordHash: string) {
   });
 }
 
-export async function updateUser(userId: string, data: Record<string, unknown>) {
+export async function activateUser(userId: string, newStatus: boolean) {
+  await prisma.user.update({
+    where: {
+      userId: userId,
+    },
+    data: {
+      isActive: newStatus,
+    },
+  });
+}
+
+export async function updateUser(
+  userId: string,
+  data: Record<string, unknown>,
+) {
   return await prisma.user.update({
     where: { userId },
     data: data as never,
