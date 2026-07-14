@@ -28,3 +28,11 @@ export async function deleteByToken(token: string) {
     },
   });
 }
+
+export async function deleteByUserId(userId: string) {
+  await prisma.refreshToken.deleteMany({
+    where: {
+      userId: userId,
+    },
+  });
+}

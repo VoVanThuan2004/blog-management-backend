@@ -5,6 +5,7 @@ import type {
   UserProfile,
 } from "../types/user.type.js";
 import * as userRepo from "../repositories/user.repository.js";
+import * as refreshTokenRepo from "../repositories/refresh_token.repository.js"
 import { AppError } from "../utils/app-error.js";
 import type { PaginationParams, PaginationResponse } from "../types/pagination.response.type.js";
 
@@ -94,6 +95,9 @@ export async function activateUserAccount(userId: string): Promise<boolean> {
 
   // 3. Cập nhật trạng thái
   await userRepo.activateUser(userId, !currentStatus);
+
+  // 4. Xóa hết mã refresh token của người dùng
+  await refreshTokenRepo.deleteByUserId(userId);
 
   return !currentStatus;
 }
