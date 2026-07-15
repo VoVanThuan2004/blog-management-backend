@@ -44,3 +44,25 @@ export const updateCategory = async (
     updatedAt: category.updatedAt.toISOString(),
   };
 };
+
+export const deleteCategoryRepo = async (categoryId: string) => {
+  await prisma.category.update({
+    where: {
+      categoryId,
+    },
+    data: {
+      isDeleted: true,
+    },
+  });
+};
+
+export const getCategoriesRepo = async () => {
+  return await prisma.category.findMany({
+    where: {
+      isDeleted: false,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+};

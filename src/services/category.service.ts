@@ -43,3 +43,25 @@ export const updateCategory = async (
   // 3. Cập nhật danh mục
   return await categoryRepo.updateCategory(categoryId, categoryName);
 };
+
+export const deleteCategoryService = async (categoryId: string) => {
+  // 1. Kiểm tra category có tồn tại
+  const category = await categoryRepo.findById(categoryId);
+  if (!category) {
+    throw new AppError(404, "Category not found");
+  }
+
+  // 2. Cập nhật trạng thái xóa mềm
+  await categoryRepo.deleteCategoryRepo(categoryId);
+};
+
+export const getCategoriesService = async (): Promise<CategoryResponse[]> => {
+  const categories = await categoryRepo.getCategoriesRepo();
+
+  return categories.map((c) => ({
+    categoryId: c.categoryId,
+    categoryName: c.categoryName,
+    createdAt: c.createdAt.toISOString(),
+    updatedAt: c.updatedAt.toISOString(),
+  })) as CategoryResponse[];
+};
