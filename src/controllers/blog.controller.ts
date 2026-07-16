@@ -3,9 +3,11 @@ import { catchAsync } from "../utils/catch-async.js";
 import type { BlogRequest } from "../types/blog.type.js";
 import {
   createBlogService,
+  getAllBlogsService,
   getBlogDetailService,
 } from "../services/blog.service.js";
 import { ApiResponse } from "../utils/api.response.js";
+import type { PaginationParams } from "../types/pagination.response.type.js";
 
 /**
  * POST /api/v1/blogs
@@ -155,5 +157,115 @@ export const getBlogDetailController = catchAsync(
     const blogResponse = await getBlogDetailService(blogId);
 
     return ApiResponse(res, 200, "Get blog detail", blogResponse);
+  },
+);
+
+/**
+ * GET /api/v1/blogs
+ * @openapi
+ * /api/v1/blogs:
+ *   get:
+ *     tags: [Blogs]
+ *     summary: Get all blogs with pagination, search, and category filter
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by title or content
+ *       - in: query
+ *         name: categoryId
+ *         schema:
+ *           type: string
+ *         description: Filter by category ID
+ *     responses:
+ *       200:
+ *         description: List of blogs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 code:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     items:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           blogId:
+ *                             type: string
+ *                           authorId:
+ *                             type: string
+ *                           authorName:
+ *                             type: string
+ *                           avatar:
+ *                             type: string
+ *                             nullable: true
+ *                           categoryId:
+ *                             type: string
+ *                           categoryName:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           content:
+ *                             type: string
+ *                           status:
+ *                             type: string
+ *                             enum: [PENDING, APPROVED, REJECTED]
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
+ *                           updatedAt:
+ *                             type: string
+ *                             format: date-time
+ *                     total:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     size:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ */
+export const getAllBlogsController = catchAsync(
+  async (req: Request, res: Response) => {
+    const page = Math.max(1, parseInt(req.query["page"] as string) || 1);
+    const size = Math.min(
+      100,
+      Math.max(1, parseInt(req.query["size"] as string) || 10),
+    );
+    const search = (req.query["search"] as string) ?? undefined;
+    const categoryId = (req.query["categoryId"] as string) ?? undefined;
+
+    const paginationParams: PaginationParams = {
+      page,
+      size,
+      search,
+    };
+
+    const data = await getAllBlogsService({
+      ...paginationParams,
+      categoryId,
+    });
+
+    return ApiResponse(res, 200, "Get all blogs", data);
   },
 );

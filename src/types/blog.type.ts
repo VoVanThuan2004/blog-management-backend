@@ -16,6 +16,7 @@ export interface BlogResponse {
   authorName: string;
   avatar: string | null;
   categoryId: string;
+  categoryName: string;
   title: string;
   content: string;
   status: BlogStatus;

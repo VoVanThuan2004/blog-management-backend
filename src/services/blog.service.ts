@@ -4,6 +4,7 @@ import * as userRepo from "../repositories/user.repository.js";
 import { AppError } from "../utils/app-error.js";
 import * as categoryRepo from "../repositories/category.repository.js";
 import * as blogRepo from "../repositories/blog.repository.js";
+import type { PaginationResponse } from "../types/pagination.response.type.js";
 
 export const createBlogService = async (
   authorId: string,
@@ -39,6 +40,7 @@ export const createBlogService = async (
     authorName: blog.author.fullName,
     avatar: blog.author.avatar,
     categoryId: blog.categoryId,
+    categoryName: blog.category.categoryName,
     title: blog.title,
     content: blog.content,
     status: blog.status as BlogStatus,
@@ -63,10 +65,52 @@ export const getBlogDetailService = async (
     authorName: blog.author.fullName,
     avatar: blog.author.avatar,
     categoryId: blog.categoryId,
+    categoryName: blog.category.categoryName,
     title: blog.title,
     content: blog.content,
     status: blog.status as BlogStatus,
     createdAt: blog.createdAt.toISOString(),
     updatedAt: blog.updatedAt.toISOString(),
+  };
+};
+
+export const getAllBlogsService = async ({
+  page,
+  size,
+  search,
+  categoryId,
+}: {
+  page: number;
+  size: number;
+  search?: string | undefined;
+  categoryId?: string | undefined;
+}): Promise<PaginationResponse<BlogResponse>> => {
+  const { items, total, totalPages } = await blogRepo.findAllBlogsRepo(
+    page,
+    size,
+    search,
+    categoryId,
+  );
+
+  const blogResponses: BlogResponse[] = items.map((blog) => ({
+    blogId: blog.blogId,
+    authorId: blog.authorId,
+    authorName: blog.author.fullName,
+    avatar: blog.author.avatar,
+    categoryId: blog.categoryId,
+    categoryName: blog.category.categoryName,
+    title: blog.title,
+    content: blog.content,
+    status: blog.status as BlogStatus,
+    createdAt: blog.createdAt.toISOString(),
+    updatedAt: blog.updatedAt.toISOString(),
+  }));
+
+  return {
+    items: blogResponses,
+    total,
+    page,
+    size,
+    totalPages,
   };
 };
