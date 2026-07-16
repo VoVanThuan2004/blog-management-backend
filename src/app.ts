@@ -13,6 +13,7 @@ import { swaggerSpec } from "./config/swagger.js";
 import { AppError } from "./utils/app-error.js";
 import userRoute from "./routes/user.route.js";
 import categoryRoute from "./routes/category.route.js";
+import blogRoute from "./routes/blog.route.js";
 
 dotenv.config();
 
@@ -66,6 +67,7 @@ app.get("/", (_req: Request, res: Response) => {
 app.use("/api/v1", authRoute);
 app.use("/api/v1", userRoute);
 app.use("/api/v1", categoryRoute);
+app.use("/api/v1", blogRoute);
 
 // 404 handler
 app.use((_req: Request, _res: Response, next: NextFunction) => {

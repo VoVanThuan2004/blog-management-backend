@@ -6,6 +6,14 @@ datasource db {
   provider = "postgresql"
 }
 
+enum BlogStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@map("blog_status")
+}
+
 
 model User {
   userId       String   @id @default(uuid()) @db.Uuid
@@ -87,7 +95,7 @@ model Blog {
   title       String
   content     String   @db.Text
 
-  status      String
+  status      BlogStatus @default(PENDING)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
