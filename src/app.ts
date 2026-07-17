@@ -16,6 +16,7 @@ import userRoute from "./routes/user.route.js";
 import categoryRoute from "./routes/category.route.js";
 import blogRoute from "./routes/blog.route.js";
 import { initSocket } from "./config/socket.js";
+import commentRoute from "./routes/comment.route.js";
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use("/api/v1", authRoute);
 app.use("/api/v1", userRoute);
 app.use("/api/v1", categoryRoute);
 app.use("/api/v1", blogRoute);
+app.use("/api/v1", commentRoute);
 
 // 404 handler
 app.use((_req: Request, _res: Response, next: NextFunction) => {
