@@ -3,6 +3,7 @@ import express, {
   type Response,
   type NextFunction,
 } from "express";
+import { createServer } from "node:http";
 import dotenv from "dotenv";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
@@ -14,10 +15,12 @@ import { AppError } from "./utils/app-error.js";
 import userRoute from "./routes/user.route.js";
 import categoryRoute from "./routes/category.route.js";
 import blogRoute from "./routes/blog.route.js";
+import { initSocket } from "./config/socket.js";
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT ?? 3000;
 
 app.use(
@@ -47,23 +50,7 @@ app.use(cookieParser());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-/**
- * GET /
- * @openapi
- * /:
- *   get:
- *     tags: [Health]
- *     summary: Health check
- *     responses:
- *       200:
- *         description: Server is running
- */
-app.get("/", (_req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({ success: true, code: 200, message: "Blog API is running" });
-});
-
+// Routes
 app.use("/api/v1", authRoute);
 app.use("/api/v1", userRoute);
 app.use("/api/v1", categoryRoute);
@@ -94,7 +81,9 @@ app.use(
   },
 );
 
-app.listen(PORT, () => {
+initSocket(httpServer);
+
+httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
