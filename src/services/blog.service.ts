@@ -114,3 +114,81 @@ export const getAllBlogsService = async ({
     totalPages,
   };
 };
+
+export const getAllAuthorBlogsService = async ({
+  page,
+  size,
+  search,
+  categoryId,
+  userId,
+}: {
+  page: number;
+  size: number;
+  search?: string | undefined;
+  categoryId?: string | undefined;
+  userId?: string | undefined;
+}): Promise<PaginationResponse<BlogResponse>> => {
+  const { items, total, totalPages } = await blogRepo.findAllBlogsRepo(
+    page,
+    size,
+    search,
+    categoryId,
+    userId,
+  );
+
+  const blogResponses: BlogResponse[] = items.map((blog) => ({
+    blogId: blog.blogId,
+    authorId: blog.authorId,
+    authorName: blog.author.fullName,
+    avatar: blog.author.avatar,
+    categoryId: blog.categoryId,
+    categoryName: blog.category.categoryName,
+    title: blog.title,
+    content: blog.content,
+    status: blog.status as BlogStatus,
+    createdAt: blog.createdAt.toISOString(),
+    updatedAt: blog.updatedAt.toISOString(),
+  }));
+
+  return {
+    items: blogResponses,
+    total,
+    page,
+    size,
+    totalPages,
+  };
+};
+
+export async function updateBlogStatusService(blogId: string, blogStatus: string) {
+  // 1. Kiểm tra blog có tồn tại
+  const blog = await blogRepo.findBlogByIdRepo(blogId);
+  if (!blog) {
+    throw new AppError(404, "Blog is not found");
+  }
+  
+  // 2. Kiểm tra trạng thái blog có hợp lệ
+  const validStatuses = Object.values(BlogStatus);
+  if (!validStatuses.includes(blogStatus as BlogStatus)) {
+    throw new AppError(400, "Blog status is not valid");
+  }
+
+  // 3. Cập nhật trạng thái blog
+  const updated = await blogRepo.updateBlogStatusRepo(
+    blogId,
+    blogStatus as BlogStatus,
+  );
+
+  return {
+    blogId: updated.blogId,
+    authorId: updated.authorId,
+    authorName: updated.author.fullName,
+    avatar: updated.author.avatar,
+    categoryId: updated.categoryId,
+    categoryName: updated.category.categoryName,
+    title: updated.title,
+    content: updated.content,
+    status: updated.status as BlogStatus,
+    createdAt: updated.createdAt.toISOString(),
+    updatedAt: updated.updatedAt.toISOString(),
+  };
+}

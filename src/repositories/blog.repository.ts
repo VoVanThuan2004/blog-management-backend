@@ -1,5 +1,9 @@
 import { prisma } from "../config/prisma.js";
-import type { BlogRequest, BlogResponse } from "../types/blog.type.js";
+import {
+  BlogStatus,
+  type BlogRequest,
+  type BlogResponse,
+} from "../types/blog.type.js";
 import type { PaginationResponse } from "../types/pagination.response.type.js";
 
 export const createBlogRepo = async (
@@ -46,6 +50,7 @@ export const findAllBlogsRepo = async (
   size: number,
   search?: string,
   categoryId?: string,
+  userId?: string,
 ) => {
   const skip = (page - 1) * size;
 
@@ -59,6 +64,11 @@ export const findAllBlogsRepo = async (
         }
       : {}),
     ...(categoryId ? { categoryId } : {}),
+    ...(userId
+      ? {
+          authorId: userId,
+        }
+      : {}),
   };
 
   const [blogs, total] = await Promise.all([
@@ -82,4 +92,29 @@ export const findAllBlogsRepo = async (
     size,
     totalPages: Math.ceil(total / size),
   };
+};
+
+export const updateBlogStatusRepo = async (
+  blogId: string,
+  blogStatus: BlogStatus,
+) => {
+  return await prisma.blog.update({
+    where: {
+      blogId,
+    },
+    data: {
+      status: blogStatus,
+    },
+    include: {
+      author: {
+        select: {
+          fullName: true,
+          avatar: true,
+        },
+      },
+      category: {
+        select: { categoryName: true },
+      },
+    },
+  });
 };
