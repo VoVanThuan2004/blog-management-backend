@@ -4,6 +4,14 @@ export interface CommentRequest {
   content: string;
 }
 
+export interface CommentReaction {
+  reactionId: string;
+  reactionType: string;
+  userId: string;
+  commentId: string;
+  createdAt: string;
+}
+
 export interface CommentResponse {
   commentId: string;
   userId: string;
@@ -13,4 +21,6 @@ export interface CommentResponse {
   parentCommentId?: string | null;
   content: string;
   createdAt: string;
+  reactions: CommentReaction[];
+  replyCount: number;
 }
