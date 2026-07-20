@@ -104,8 +104,11 @@ model Blog {
 
   status      BlogStatus @default(PENDING)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  otpCode       String?
+  otpExpiredAt  DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   author       User      @relation(fields: [authorId], references: [userId])
   category     Category  @relation(fields: [categoryId], references: [categoryId])

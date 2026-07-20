@@ -2,6 +2,7 @@ import { prisma } from "../config/prisma.js";
 import type { User } from "@prisma/client";
 import type { UserResponse } from "../types/user.type.js";
 import type { PaginationResponse } from "../types/pagination.response.type.js";
+import type { RegisterRequest } from "../types/auth.type.js";
 
 export type UserWithRoles = User & { roles: string[] };
 
@@ -80,7 +81,10 @@ export async function findAll(
   `;
 
   const [countResult] = searchPattern
-    ? await prisma.$queryRawUnsafe<{ total: number }[]>(countQuery, searchPattern)
+    ? await prisma.$queryRawUnsafe<{ total: number }[]>(
+        countQuery,
+        searchPattern,
+      )
     : await prisma.$queryRawUnsafe<{ total: number }[]>(countQuery);
 
   const items = searchPattern
@@ -123,5 +127,50 @@ export async function updateUser(
   return await prisma.user.update({
     where: { userId },
     data: data as never,
+  });
+}
+
+export async function createUserAccount(
+  email: string,
+  fullName: string,
+  passwordHash: string,
+  otpCode: string,
+  otpExpiredAt: Date,
+) {
+  return await prisma.user.create({
+    data: {
+      email,
+      passwordHash,
+      fullName,
+      otpCode,
+      otpExpiredAt,
+    },
+  });
+}
+
+export async function saveOtpRepo(
+  userId: string,
+  otpCode: string,
+  otpExpiredAt: Date,
+) {
+  return await prisma.user.update({
+    where: { userId },
+    data: { otpCode, otpExpiredAt },
+  });
+}
+
+export async function clearOtpRepo(userId: string) {
+  return await prisma.user.update({
+    where: { userId },
+    data: { otpCode: null, otpExpiredAt: null },
+  });
+}
+
+export async function createUserRoleRepo(userId: string, roleId: string) {
+  await prisma.userRole.create({
+    data: {
+      userId,
+      roleId,
+    },
   });
 }

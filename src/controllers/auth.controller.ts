@@ -7,9 +7,17 @@ import {
   login,
   logout,
   refreshTokenForUser,
+  registerAccountService,
+  resendOtpService,
+  verifyOtpService,
 } from "../services/auth.service.js";
 import type { LoginSuccess } from "../types/login.type.js";
-import type { ChangePasswordDTO } from "../types/auth.type.js";
+import type {
+  ChangePasswordDTO,
+  RegisterRequest,
+  ResendOtpRequest,
+  VerifyOtpRequest,
+} from "../types/auth.type.js";
 
 /**
  * POST /api/v1/login
@@ -194,5 +202,136 @@ export const refreshTokenController = catchAsync(
     return ApiResponse(res, 200, "Token refreshed successfully", {
       accessToken,
     });
+  },
+);
+
+/**
+ * POST /api/v1/auth/register
+ * @openapi
+ * /api/v1/auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register a new account (OTP sent to email)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, fullName, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               fullName:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Account created, OTP sent
+ *       400:
+ *         description: Validation error or email already registered
+ */
+export const registerAccountController = catchAsync(
+  async (req: Request, res: Response) => {
+    const registerRequest: RegisterRequest = req.body;
+
+    await registerAccountService(registerRequest);
+
+    return ApiResponse(res, 200, "Account created. Please check your email for OTP.");
+  },
+);
+
+/**
+ * POST /api/v1/auth/verify-otp
+ * @openapi
+ * /api/v1/auth/verify-otp:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Verify OTP code to activate account
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, otpCode]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               otpCode:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Account activated, tokens returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 code:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
+ *       400:
+ *         description: Invalid or expired OTP
+ *       404:
+ *         description: User not found
+ */
+export const verifyOtpController = catchAsync(
+  async (req: Request, res: Response) => {
+    const { email, otpCode }: VerifyOtpRequest = req.body;
+
+    const userAgent = req.headers["user-agent"] ?? "unknown";
+    const ipAddress = req.ip ?? req.socket.remoteAddress ?? "unknown";
+    const data = await verifyOtpService(email, otpCode, res, userAgent, ipAddress);
+
+    return ApiResponse(res, 200, "Account activated successfully", data);
+  },
+);
+
+/**
+ * POST /api/v1/auth/resend-otp
+ * @openapi
+ * /api/v1/auth/resend-otp:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Resend OTP code to email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: OTP resent
+ *       400:
+ *         description: Current OTP still valid
+ *       404:
+ *         description: User not found
+ */
+export const resendOtpController = catchAsync(
+  async (req: Request, res: Response) => {
+    const { email }: ResendOtpRequest = req.body;
+
+    await resendOtpService(email);
+
+    return ApiResponse(res, 200, "OTP resent successfully");
   },
 );
