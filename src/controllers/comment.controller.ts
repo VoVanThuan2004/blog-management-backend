@@ -1,10 +1,15 @@
 import type { Request, Response } from "express";
 import { catchAsync } from "../utils/catch-async.js";
-import type { CommentRequest } from "../types/comment.type.js";
+import type {
+  CommentRequest,
+  CommentUpdateRequest,
+} from "../types/comment.type.js";
 import {
+  deleteCommentService,
   getCommentsService,
   getRepliesService,
   sendCommentService,
+  updateCommentService,
 } from "../services/comment.service.js";
 import { ApiResponse } from "../utils/api.response.js";
 
@@ -307,5 +312,191 @@ export const getRepliesController = catchAsync(
     const data = await getRepliesService(parentCommentId, page, size);
 
     return ApiResponse(res, 200, "Get replies successfully", data);
+  },
+);
+
+/**
+ * DELETE /api/v1/comments/:commentId
+ * @openapi
+ * /api/v1/comments/{commentId}:
+ *   delete:
+ *     tags: [Comments]
+ *     summary: Delete your own comment
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Comment deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 code:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: No token provided
+ *       403:
+ *         description: Not your comment
+ *       404:
+ *         description: Comment not found
+ */
+export const deleteCommentController = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.userId as string;
+    const commentId = req.params["commentId"] as string;
+
+    await deleteCommentService(userId, commentId);
+
+    return ApiResponse(res, 200, "Comment deleted successfully");
+  },
+);
+
+/**
+ * DELETE /api/v1/admin/comments/:commentId
+ * @openapi
+ * /api/v1/admin/comments/{commentId}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Delete any comment (Admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Comment deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 code:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: No token provided
+ *       403:
+ *         description: Admin only
+ *       404:
+ *         description: Comment not found
+ */
+export const adminDeleteCommentController = catchAsync(
+  async (req: Request, res: Response) => {
+    const commentId = req.params["commentId"] as string;
+
+    await deleteCommentService("", commentId, true);
+
+    return ApiResponse(res, 200, "Comment deleted successfully");
+  },
+);
+
+/**
+ * PUT /api/v1/comments/:commentId
+ * @openapi
+ * /api/v1/comments/{commentId}:
+ *   put:
+ *     tags: [Comments]
+ *     summary: Update your own comment
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [content]
+ *             properties:
+ *               content:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Comment updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 code:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     commentId:
+ *                       type: string
+ *                     userId:
+ *                       type: string
+ *                     fullName:
+ *                       type: string
+ *                     avatar:
+ *                       type: string
+ *                       nullable: true
+ *                     blogId:
+ *                       type: string
+ *                     parentCommentId:
+ *                       type: string
+ *                       nullable: true
+ *                     content:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     replyCount:
+ *                       type: integer
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: No token provided
+ *       403:
+ *         description: Not your comment
+ *       404:
+ *         description: Comment not found
+ */
+export const updateCommentController = catchAsync(
+  async (req: Request, res: Response) => {
+    const commentId = req.params["commentId"] as string;
+    const userId = req.user?.userId as string;
+    const commentUpdateRequest: CommentUpdateRequest = req.body;
+
+    const commentResponse = await updateCommentService(
+      userId,
+      commentId,
+      commentUpdateRequest,
+    );
+
+    return ApiResponse(
+      res,
+      200,
+      "Updated comment successfully",
+      commentResponse,
+    );
   },
 );

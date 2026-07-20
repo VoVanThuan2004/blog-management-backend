@@ -108,3 +108,43 @@ export async function findRepliesRepo(
     totalPages: Math.ceil(total / size),
   };
 }
+
+export async function findCommentByIdRepo(commentId: string) {
+  return await prisma.comment.findUnique({
+    where: { commentId },
+  });
+}
+
+export async function deleteCommentByIdRepo(commentId: string) {
+  return await prisma.comment.delete({
+    where: { commentId },
+  });
+}
+
+export async function updateCommentByIdRepo(
+  commentId: string,
+  content: string,
+) {
+  return await prisma.comment.update({
+    where: {
+      commentId,
+    },
+    data: {
+      content,
+    },
+    include: {
+      user: {
+        select: {
+          fullName: true,
+          avatar: true,
+        },
+      },
+    },
+  });
+}
+
+export async function findCommentUserRepo(commentId: string, userId: string) {
+  return await prisma.comment.findUnique({
+    where: { commentId, userId },
+  });
+}

@@ -4,6 +4,10 @@ export interface CommentRequest {
   content: string;
 }
 
+export interface CommentUpdateRequest {
+  content: string;
+}
+
 export interface CommentReaction {
   reactionId: string;
   reactionType: string;
