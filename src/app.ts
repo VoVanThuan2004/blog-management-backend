@@ -17,6 +17,7 @@ import categoryRoute from "./routes/category.route.js";
 import blogRoute from "./routes/blog.route.js";
 import { initSocket } from "./config/socket.js";
 import commentRoute from "./routes/comment.route.js";
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -48,6 +49,8 @@ const limiter = rateLimit({
 app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
+
+console.log(await bcrypt.hash("admin12345", 10));
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

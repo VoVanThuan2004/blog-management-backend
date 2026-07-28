@@ -185,9 +185,7 @@ export const deleteCategoryController = catchAsync(
 
     await deleteCategoryService(categoryId);
 
-    return ApiResponse(res, 200, "Deleted category successfully", {
-      categoryId,
-    });
+    return ApiResponse(res, 200, "Deleted category successfully", categoryId);
   },
 );
 

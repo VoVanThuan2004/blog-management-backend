@@ -10,8 +10,8 @@ import {
 const route = Router();
 
 route.post("/categories", adminMiddleWare, createCategoryController);
-route.put("/:categoryId/categories", adminMiddleWare, updateCategoryController);
-route.delete("/:categoryId/categories", adminMiddleWare, deleteCategoryController);
+route.put("/categories/:categoryId", adminMiddleWare, updateCategoryController);
+route.delete("/categories/:categoryId", adminMiddleWare, deleteCategoryController);
 route.get("/categories", getCategoriesController);
 
 export default route;
