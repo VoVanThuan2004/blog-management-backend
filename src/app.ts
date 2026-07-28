@@ -55,7 +55,7 @@ console.log(await bcrypt.hash("admin12345", 10));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
-app.use("/api/v1", authRoute);
+app.use("/api/v1/auth", authRoute);
 app.use("/api/v1", userRoute);
 app.use("/api/v1", categoryRoute);
 app.use("/api/v1", blogRoute);

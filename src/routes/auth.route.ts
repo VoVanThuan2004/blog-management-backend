@@ -16,8 +16,8 @@ route.post("/login", loginController);
 route.post("/logout", logoutController);
 route.post("/change-password", authMiddleWare, changePasswordController);
 route.post("/refresh-token", refreshTokenController);
-route.post("/auth/register", registerAccountController);
-route.post("/auth/verify-otp", verifyOtpController);
-route.post("/auth/resend-otp", resendOtpController);
+route.post("/register", registerAccountController);
+route.post("/verify-otp", verifyOtpController);
+route.post("/resend-otp", resendOtpController);
 
 export default route;
